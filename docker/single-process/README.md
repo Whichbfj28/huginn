@@ -35,6 +35,7 @@ It will also seed the database (rake db:seed) unless this is defined:
     DO_NOT_SEED
 
 This same seeding initially defines the "admin" user with a default password of "password" as per the standard Huginn documentation.
+You can customize the admin account name with the environment variable ``SEED_USERNAME`` and ``SEED_PASSWORD``.
 
 If you do not wish to have the default 6 agents, you will want to set the above environment variable after your initially deploy, otherwise they will be added automatically the next time a container pointing at the database is spun up.
 
@@ -66,14 +67,14 @@ Manual startup and linking to a MySQL container:
         -e DATABASE_NAME=huginn \
         -e DATABASE_USERNAME=huginn \
         -e DATABASE_PASSWORD=somethingsecret \
-        huginn/huginn-single-process
+        ghcr.io/huginn/huginn-single-process
 
     docker run --rm --name huginn_threaded \
         --link huginn_mysql:mysql \
         -e DATABASE_NAME=huginn \
         -e DATABASE_USERNAME=huginn \
         -e DATABASE_PASSWORD=somethingsecret \
-        huginn/huginn-single-process /scripts/init bin/threaded.rb
+        ghcr.io/huginn/huginn-single-process /scripts/init bin/threaded.rb
 
 or alternatively:
 
@@ -83,7 +84,7 @@ or alternatively:
         -e DATABASE_USERNAME=huginn \
         -e DATABASE_PASSWORD=somethingsecret \
         -e WORKER_CMD='bin/threaded.rb' \
-        huginn/huginn-single-process
+        ghcr.io/huginn/huginn-single-process
 
 ## Environment Variables
 
@@ -97,7 +98,7 @@ In newer versions of Docker you are able to pass your own .env file in to the co
 
 You don't need to do this on your own, but if you really want run this command in the Huginn root directory:
 
-    bin/docker_wrapper build --rm=true --tag={yourname}/huginn -f docker/single-process/Dockerfile .
+    docker build --rm=true --tag={yourname}/huginn -f docker/single-process/Dockerfile .
 
 ## Source
 

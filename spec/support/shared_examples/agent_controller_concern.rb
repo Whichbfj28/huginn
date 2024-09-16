@@ -79,7 +79,7 @@ shared_examples_for AgentControllerConcern do
 
     it "should run targets" do
       control_target_ids = agent.control_targets.map(&:id)
-      stub(Agent).async_check(anything) { |id|
+      allow(Agent).to receive(:async_check).with(anything) { |id|
         control_target_ids.delete(id)
       }
 
@@ -89,7 +89,7 @@ shared_examples_for AgentControllerConcern do
 
     it "should not run disabled targets" do
       control_target_ids = agent.control_targets.map(&:id)
-      stub(Agent).async_check(anything) { |id|
+      allow(Agent).to receive(:async_check).with(anything) { |id|
         control_target_ids.delete(id)
       }
 
@@ -117,7 +117,7 @@ shared_examples_for AgentControllerConcern do
       expect(agent.control_targets.reload).to all(satisfy { |a| !a.disabled? })
     end
 
-    it "should enable targets and drop pending events", focus: true do
+    it "should enable targets and drop pending events" do
       agent.options['action'] = 'enable'
       agent.options['drop_pending_events'] = 'true'
       agent.save!
@@ -149,7 +149,7 @@ shared_examples_for AgentControllerConcern do
 
     it "should configure targets with nested objects" do
       agent.control_targets = [
-        agents(:bob_basecamp_agent),  # does not support a `template` option, but anyway
+        agents(:bob_twitter_user_agent),  # does not support a `template` option, but anyway
         agents(:bob_data_output_agent)
       ]
       agent.options['action'] = 'configure'

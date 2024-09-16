@@ -50,7 +50,6 @@ bob_disabled_website_agent:
                  }
                }.to_json.inspect %>
 
-
 bob_weather_agent:
   type: Agents::WeatherAgent
   user: bob
@@ -58,7 +57,7 @@ bob_weather_agent:
   name: "SF Weather"
   guid: <%= SecureRandom.hex %>
   keep_events_for: <%= 45.days %>
-  options: <%= { :location => 94102, :lat => 37.779329, :lng => -122.41915, :api_key => 'test' }.to_json.inspect %>
+  options: <%= { :location => "37.779329,-122.41915", :api_key => 'test' }.to_json.inspect %>
 
 bob_formatting_agent:
   type: Agents::EventFormattingAgent
@@ -75,7 +74,7 @@ jane_weather_agent:
   name: "SF Weather"
   guid: <%= SecureRandom.hex %>
   keep_events_for: <%= 30.days %>
-  options: <%= { :location => 94103, :lat => 37.779329, :lng => -122.41915, :api_key => 'test' }.to_json.inspect %>
+  options: <%= { :location => "37.779329,-122.41915", :api_key => 'test' }.to_json.inspect %>
 
 jane_rain_notifier_agent:
   type: Agents::TriggerAgent
@@ -141,14 +140,15 @@ bob_manual_event_agent:
   name: "Bob's event testing agent"
   guid: <%= SecureRandom.hex %>
 
-bob_basecamp_agent:
-  type: Agents::BasecampAgent
+bob_twitter_user_agent:
+  type: Agents::TwitterUserAgent
   user: bob
-  name: "bob basecamp agent"
+  name: "bob tweets agent"
   service: generic
   guid: <%= SecureRandom.hex %>
   options: <%= {
-      :project_id => "12345",
+      username: 'bob',
+      expected_update_period_in_days: 2,
     }.to_json.inspect %>
 
 bob_csv_agent:
@@ -157,16 +157,16 @@ bob_csv_agent:
   name: "Bob's CsvAgent"
   guid: <%= SecureRandom.hex %>
 
-jane_basecamp_agent:
-  type: Agents::BasecampAgent
+jane_twitter_user_agent:
+  type: Agents::TwitterUserAgent
   user: jane
-  name: "jane basecamp agent"
+  name: "jane tweets agent"
   service: generic
   guid: <%= SecureRandom.hex %>
   options: <%= {
-      :project_id => "12345",
+      username: 'jane',
+      expected_update_period_in_days: 2,
     }.to_json.inspect %>
-
 
 bob_data_output_agent:
   type: Agents::DataOutputAgent

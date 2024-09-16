@@ -45,7 +45,7 @@ describe AgentsController do
   describe "POST run" do
     it "triggers Agent.async_check with the Agent's ID" do
       sign_in users(:bob)
-      mock(Agent).async_check(agents(:bob_manual_event_agent).id)
+      expect(Agent).to receive(:async_check).with(agents(:bob_manual_event_agent).id)
       post :run, params: {:id => agents(:bob_manual_event_agent).to_param}
     end
 
@@ -53,6 +53,42 @@ describe AgentsController do
       sign_in users(:jane)
       expect {
         post :run, params: {:id => agents(:bob_manual_event_agent).to_param}
+      }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
+  describe "POST reemit_events" do
+    let(:agent) { agents(:bob_website_agent) }
+    let(:params) { { :id => agent.to_param } }
+
+    it "enqueues an AgentReemitJob" do
+      expect(AgentReemitJob).to receive(:perform_later).with(agent, agent.most_recent_event.id, false)
+      sign_in users(:bob)
+      post :reemit_events, params: params
+    end
+
+    context "when agent has no events" do
+      let(:agent) { agents(:bob_weather_agent) }
+
+      it "does not enqueue an AgentReemitJob" do
+        expect(AgentReemitJob).not_to receive(:perform_later)
+        sign_in users(:bob)
+        post :reemit_events, params: params
+      end
+    end
+
+    context "when delete_old_events passed" do
+      it "enqueues an AgentReemitJob with delete_old_events set to true" do
+        expect(AgentReemitJob).to receive(:perform_later).with(agent, agent.most_recent_event.id, true)
+        sign_in users(:bob)
+        post :reemit_events, params: params.merge('delete_old_events' => '1')
+      end
+    end
+
+    it "can only be accessed by the Agent's owner" do
+      sign_in users(:jane)
+      expect {
+        post :reemit_events, params: {:id => agents(:bob_website_agent).to_param}
       }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
@@ -96,12 +132,12 @@ describe AgentsController do
     end
 
     it "runs event propagation for all Agents" do
-      mock.proxy(Agent).receive!
+      expect(Agent).to receive(:receive!).and_call_original
       post :propagate
     end
 
     it "does not run the propagation when a job is already enqueued" do
-      mock(AgentPropagateJob).can_enqueue? { false }
+      expect(AgentPropagateJob).to receive(:can_enqueue?) { false }
       post :propagate
       expect(flash[:notice]).to eq('Event propagation is already scheduled to run.')
     end
@@ -383,18 +419,14 @@ describe AgentsController do
     describe "POST validate" do
 
       it "returns with status 200 when called with a valid option" do
-        any_instance_of(Agents::HipchatAgent) do |klass|
-          stub(klass).validate_option { true }
-        end
+        allow_any_instance_of(Agents::HipchatAgent).to receive(:validate_option) { true }
 
         post :validate, params: @params
         expect(response.status).to eq 200
       end
 
       it "returns with status 403 when called with an invalid option" do
-        any_instance_of(Agents::HipchatAgent) do |klass|
-          stub(klass).validate_option { false }
-        end
+        allow_any_instance_of(Agents::HipchatAgent).to receive(:validate_option) { false }
 
         post :validate, params: @params
         expect(response.status).to eq 403
@@ -403,9 +435,7 @@ describe AgentsController do
 
     describe "POST complete" do
       it "callsAgent#complete_option and renders json" do
-        any_instance_of(Agents::HipchatAgent) do |klass|
-          stub(klass).complete_option { [{name: 'test', value: 1}] }
-        end
+        allow_any_instance_of(Agents::HipchatAgent).to receive(:complete_option) { [{name: 'test', value: 1}] }
 
         post :complete, params: @params
         expect(response.status).to eq 200

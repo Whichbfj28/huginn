@@ -2,6 +2,8 @@ module AgentControllerConcern
   extend ActiveSupport::Concern
 
   included do
+    can_control_other_agents!
+
     validate :validate_control_action
   end
 
@@ -24,8 +26,9 @@ module AgentControllerConcern
         end
       }
     when 'configure'
-      if options['configure_options'].nil? || options['configure_options'].keys.length == 0
-        errors.add(:base, "The 'configure_options' options hash must be supplied when using the 'configure' action.")
+      if !options['configure_options'].is_a?(Hash) || options['configure_options'].empty?
+        errors.add(:base,
+                   "A non-empty hash must be specified in the 'configure_options' option when using the 'configure' action.")
       end
     when 'enable', 'disable'
     when nil
@@ -40,48 +43,46 @@ module AgentControllerConcern
   def control!
     control_targets.each do |target|
       interpolate_with('target' => target) do
-        begin
-          case action = control_action
-          when 'run'
-            case
-            when target.cannot_be_scheduled?
-              error "'#{target.name}' cannot run without an incoming event"
-            when target.disabled?
-              log "Agent run ignored for disabled Agent '#{target.name}'"
-            else
-              Agent.async_check(target.id)
-              log "Agent run queued for '#{target.name}'"
-            end
-          when 'enable'
-            case
-            when target.disabled?
-              if boolify(interpolated['drop_pending_events'])
-                target.drop_pending_events = true
-              end
-              target.update!(disabled: false)
-              log "Agent '#{target.name}' is enabled"
-            else
-              log "Agent '#{target.name}' is already enabled"
-            end
-          when 'disable'
-            case
-            when target.disabled?
-              log "Agent '#{target.name}' is alread disabled"
-            else
-              target.update!(disabled: true)
-              log "Agent '#{target.name}' is disabled"
-            end
-          when 'configure'
-            target.update! options: target.options.deep_merge(interpolated['configure_options'])
-            log "Agent '#{target.name}' is configured with #{interpolated['configure_options'].inspect}"
-          when ''
-            # Do nothing
+        case action = control_action
+        when 'run'
+          case
+          when target.cannot_be_scheduled?
+            error "'#{target.name}' cannot run without an incoming event"
+          when target.disabled?
+            log "Agent run ignored for disabled Agent '#{target.name}'"
           else
-            error "Unsupported action '#{action}' ignored for '#{target.name}'"
+            Agent.async_check(target.id)
+            log "Agent run queued for '#{target.name}'"
           end
-        rescue => e
-          error "Failed to #{action} '#{target.name}': #{e.message}"
+        when 'enable'
+          case
+          when target.disabled?
+            if boolify(interpolated['drop_pending_events'])
+              target.drop_pending_events = true
+            end
+            target.update!(disabled: false)
+            log "Agent '#{target.name}' is enabled"
+          else
+            log "Agent '#{target.name}' is already enabled"
+          end
+        when 'disable'
+          case
+          when target.disabled?
+            log "Agent '#{target.name}' is alread disabled"
+          else
+            target.update!(disabled: true)
+            log "Agent '#{target.name}' is disabled"
+          end
+        when 'configure'
+          target.update! options: target.options.deep_merge(interpolated['configure_options'])
+          log "Agent '#{target.name}' is configured with #{interpolated['configure_options'].inspect}"
+        when ''
+          log 'No action is performed.'
+        else
+          error "Unsupported action '#{action}' ignored for '#{target.name}'"
         end
+      rescue StandardError => e
+        error "Failed to #{action} '#{target.name}': #{e.message}"
       end
     end
   end

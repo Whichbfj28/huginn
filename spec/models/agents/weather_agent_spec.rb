@@ -5,7 +5,7 @@ describe Agents::WeatherAgent do
     Agents::WeatherAgent.create(
       name: 'weather',
       options: {
-        :location => 94103,
+          :location => "37.77550,-122.41292",
         :api_key => 'test',
         :which_day => 1,
       }
@@ -15,12 +15,12 @@ describe Agents::WeatherAgent do
     end
   end
 
-  let :dark_sky_agent do
+  let :pirate_weather_agent do
     Agents::WeatherAgent.create(
-      name: "weather from dark sky",
+      name: "weather from Pirate Weather",
       options: {
           :location => "37.779329,-122.41915",
-          :service => "darksky",
+          :service => "pirateweather",
           :which_day => 1,
           :api_key => "test"
       }
@@ -44,34 +44,23 @@ describe Agents::WeatherAgent do
     expect(agent.working?).to be_falsey
   end
 
-  context "wunderground" do
+  context "pirate weather" do
     it "validates the location properly" do
-      expect(agent.options["location"]).to eq 94103
-      agent.options["location"] = "meh, really whatever, this is on the way to deprecation anyway"
-      expect(agent).to be_valid
-      agent.options["location"] = nil
-      expect(agent).to_not be_valid
-      agent.options["location"] = 94103
-    end
-  end
-
-  context "dark sky" do
-    it "validates the location properly" do
-      expect(dark_sky_agent.options["location"]).to eq "37.779329,-122.41915"
-      expect(dark_sky_agent).to be_valid
-      dark_sky_agent.options["location"] = "37.779329, -122.41915" # with a space
-      expect(dark_sky_agent).to be_valid
-      dark_sky_agent.options["location"] = "94103" # a zip code
-      expect(dark_sky_agent).to_not be_valid
-      dark_sky_agent.options["location"] = "37.779329,-122.41915"
-      expect(dark_sky_agent.options["location"]).to eq "37.779329,-122.41915"
-      expect(dark_sky_agent).to be_valid
+      expect(pirate_weather_agent.options["location"]).to eq "37.779329,-122.41915"
+      expect(pirate_weather_agent).to be_valid
+      pirate_weather_agent.options["location"] = "37.779329, -122.41915" # with a space
+      expect(pirate_weather_agent).to be_valid
+      pirate_weather_agent.options["location"] = "94103" # a zip code
+      expect(pirate_weather_agent).to_not be_valid
+      pirate_weather_agent.options["location"] = "37.779329,-122.41915"
+      expect(pirate_weather_agent.options["location"]).to eq "37.779329,-122.41915"
+      expect(pirate_weather_agent).to be_valid
     end
     it "fails cases that pass the first test but are invalid" do
-      dark_sky_agent.options["location"] = "137.779329, -122.41915" # too high latitude
-      expect(dark_sky_agent).to_not be_valid
-      dark_sky_agent.options["location"] = "37.779329, -522.41915" # too low longitude
-      expect(dark_sky_agent).to_not be_valid
+      pirate_weather_agent.options["location"] = "137.779329, -122.41915" # too high latitude
+      expect(pirate_weather_agent).to_not be_valid
+      pirate_weather_agent.options["location"] = "37.779329, -522.41915" # too low longitude
+      expect(pirate_weather_agent).to_not be_valid
     end
   end
 

@@ -41,6 +41,7 @@ It will also seed the database (rake db:seed) unless this is defined:
     DO_NOT_SEED
 
 This same seeding initially defines the "admin" user with a default password of "password" as per the standard Huginn documentation.
+You can customize the admin account name with the environment variable ``SEED_USERNAME`` and ``SEED_PASSWORD``.
 
 If you do not wish to have the default 6 agents, you will want to set the above environment variable after your initially deploy, otherwise they will be added automatically the next time a container pointing at the database is spun up.
 
@@ -50,11 +51,11 @@ The CMD launches Huginn via the scripts/init script. This may become the ENTRYPO
 
 Simple stand-alone usage (use only for testing/evaluation as it can not be updated without losing data):
 
-    docker run -it -p 3000:3000 huginn/huginn
+    docker run -it -p 3000:3000 ghcr.io/huginn/huginn
 
 Use a volume to export the data of the internal mysql server:
 
-    docker run --rm -it -p 3000:3000 -v /home/huginn/mysql-data:/var/lib/mysql huginn/huginn
+    docker run --rm -it -p 3000:3000 -v /home/huginn/mysql-data:/var/lib/mysql ghcr.io/huginn/huginn
 
 To link to another mysql container, for example:
 
@@ -71,7 +72,7 @@ To link to another mysql container, for example:
         -e HUGINN_DATABASE_NAME=huginn \
         -e HUGINN_DATABASE_USERNAME=huginn \
         -e HUGINN_DATABASE_PASSWORD=somethingsecret \
-        huginn/huginn
+        ghcr.io/huginn/huginn
 
 To link to another container named 'postgres':
 
@@ -85,7 +86,7 @@ To link to another container named 'postgres':
         -e HUGINN_DATABASE_USERNAME=huginn \
         -e HUGINN_DATABASE_PASSWORD=mysecretpassword \
         -e HUGINN_DATABASE_ADAPTER=postgresql \
-        huginn/huginn
+        ghcr.io/huginn/huginn
 
 To use a separate, non-linked mysql container:
 
@@ -96,7 +97,7 @@ To use a separate, non-linked mysql container:
         -e HUGINN_DATABASE_PASSWORD=mysecretpassword \
         -e HUGINN_DATABASE_HOST=myname.mydomain \
         -e HUGINN_DATABASE_PORT=3306
-        huginn/huginn
+        ghcr.io/huginn/huginn
 
 The `docker/multi-process` folder also has a `docker-compose.yml` that allows for a sample database formation with a data volume container:
 
@@ -115,7 +116,7 @@ In newer versions of Docker you are able to pass your own .env file in to the co
 
 You don't need to do this on your own, because there is an [automated build](https://hub.docker.com/r/huginn/huginn/) for this repository, but if you really want run this command in the Huginn root directory:
 
-    bin/docker_wrapper build --rm=true --tag={yourname}/huginn -f docker/multi-process/Dockerfile .
+    docker build --rm=true --tag={yourname}/huginn -f docker/multi-process/Dockerfile .
 
 ## Source
 

@@ -1,15 +1,16 @@
 module Agents
   class SlackAgent < Agent
     DEFAULT_USERNAME = 'Huginn'
-    ALLOWED_PARAMS = ['channel', 'username', 'unfurl_links', 'attachments']
+    ALLOWED_PARAMS = ['channel', 'username', 'unfurl_links', 'attachments', 'blocks']
 
+    can_dry_run!
     cannot_be_scheduled!
     cannot_create_events!
     no_bulk_receive!
 
     gem_dependency_check { defined?(Slack) }
 
-    description <<-MD
+    description <<~MD
       The Slack Agent lets you receive events and send notifications to [Slack](https://slack.com/).
 
       #{'## Include `slack-notifier` in your Gemfile to use this Agent!' if dependencies_missing?}
@@ -37,7 +38,7 @@ module Agents
 
     def validate_options
       unless options['webhook_url'].present? ||
-             (options['auth_token'].present? && options['team_name'].present?)  # compatibility
+          (options['auth_token'].present? && options['team_name'].present?)  # compatibility
         errors.add(:base, "webhook_url is required")
       end
 
@@ -64,11 +65,11 @@ module Agents
     end
 
     def slack_notifier
-      @slack_notifier ||= Slack::Notifier.new(webhook_url, username: username)
+      @slack_notifier ||= Slack::Notifier.new(webhook_url, username:)
     end
 
     def filter_options(opts)
-      opts.select { |key, value| ALLOWED_PARAMS.include? key }.symbolize_keys
+      opts.select { |key, _value| ALLOWED_PARAMS.include? key }.symbolize_keys
     end
 
     def receive(incoming_events)

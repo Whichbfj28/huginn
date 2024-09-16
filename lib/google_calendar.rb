@@ -33,7 +33,7 @@ class GoogleCalendar
     instance = new(*args)
     block.call(instance)
   ensure
-    instance.cleanup!
+    instance&.cleanup!
   end
 
   def auth_as
@@ -49,7 +49,7 @@ class GoogleCalendar
     @logger.info("Attempting to create event for " + who)
     @logger.debug details.to_yaml
 
-    event = Google::Apis::CalendarV3::Event.new(details.deep_symbolize_keys)
+    event = Google::Apis::CalendarV3::Event.new(**details.deep_symbolize_keys)
     ret = @calendar.insert_event(
         who,
         event,
